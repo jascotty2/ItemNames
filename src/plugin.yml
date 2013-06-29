@@ -1,0 +1,13 @@
+name: ItemNames
+main: me.jascotty2.itemnames.ItemNames
+version: 1.0
+website: http://github.com/jascotty2/
+author: jascotty2
+commands:
+  itemnames:
+    description: Item Names Interface Command
+    
+permissions:
+  itemnames.admin:
+    description: all admin commands
+    default: op
