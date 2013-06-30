@@ -1,7 +1,10 @@
-334: Fabric
-322:
-  0: Zap Apple
-  1: Magical Zap Apple
-340: Library Book
-339: Scroll
 228: Quill
+322:
+  default: Zap Apple
+  1: Magical Zap Apple
+334: Fabric
+339: Scroll
+340: Library Book
+351:
+  0: Black Ink
+  3: Chocolate
