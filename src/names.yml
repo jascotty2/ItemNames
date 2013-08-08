@@ -2,6 +2,11 @@
 322:
   default: Zap Apple
   1: Magical Zap Apple
+326: 
+  name: "&9Bucket of Water"
+  lore: 
+    - "&9&oKnown for making people"
+    - "&b&oSoaking Wet&9 and &1&oClueless"
 334: Fabric
 339: Scroll
 340: Library Book

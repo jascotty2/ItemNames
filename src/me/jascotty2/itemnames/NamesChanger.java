@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import me.jascotty2.lib.io.CheckInput;
 import me.jascotty2.lib.io.FileIO;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -19,6 +20,7 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.Repairable;
 
 public class NamesChanger {
 
@@ -48,22 +50,36 @@ public class NamesChanger {
 			config = YamlConfiguration.loadConfiguration(configFile);
 			for (String key : config.getKeys(false)) {
 				int id = CheckInput.GetInt(key, 0);
-				if(id > 0) {
+				if (id > 0) {
 					Object o = config.get(key);
 					if (o instanceof String) {
-						names.put(id, new ItemSubNames((String) o));
+						names.put(id, new ItemSubNames(ChatColor.translateAlternateColorCodes('&', (String) o)));
 					} // else if (o instanceof List) { // todo? random names?
 					else if (o instanceof MemorySection) {
-						MemorySection m = (MemorySection) o;
-						ItemSubNames nms = new ItemSubNames();
-						o = m.get("default");
-						if(o instanceof String) {
-							nms.name = (String) o;
-						}
-						for (String subkey : m.getKeys(false)) {
-							short sub = CheckInput.GetShort(subkey, (short)0);
-							if(sub >= 0 && (o = m.get(subkey)) instanceof String) {
-								nms.addName(sub, (String) o);
+						ItemSubNames nms = loadSection(o);
+						if (nms == null) {
+							MemorySection m = (MemorySection) o;
+							o = m.get("default");
+
+							nms = loadSection(o);
+							if (nms == null) {
+								nms = new ItemSubNames();
+							}
+
+							for (String subkey : m.getKeys(false)) {
+								short sub = CheckInput.GetShort(subkey, (short) 0);
+								if (sub >= 0) {
+									o = m.get(subkey);
+									ItemSubNames t = loadSection(o);
+									if (t != null) {
+										if (t.name != null) {
+											nms.addName(sub, t.name);
+										}
+										if (t.lore != null) {
+											nms.addLore(sub, t.lore);
+										}
+									}
+								}
 							}
 						}
 						names.put(id, nms);
@@ -73,6 +89,27 @@ public class NamesChanger {
 		} catch (Exception ex) {
 			plugin.getLogger().log(Level.SEVERE, "Failed to load Names config", ex);
 		}
+	}
+
+	ItemSubNames loadSection(Object o) {
+		if (o instanceof String) {
+			return new ItemSubNames(ChatColor.translateAlternateColorCodes('&', (String) o));
+		} else if (o instanceof MemorySection) {
+			final MemorySection md = (MemorySection) o;
+			if (md.isString("name") || md.isList("lore")) {
+				final String name = md.getString("name");
+				final ItemSubNames nm = new ItemSubNames(name == null ? null : ChatColor.translateAlternateColorCodes('&', name));
+				if (md.isList("lore")) {
+					final ArrayList<String> lore = new ArrayList<String>();
+					for (Object l : md.getList("lore")) {
+						lore.add(ChatColor.translateAlternateColorCodes('&', l.toString()));
+					}
+					nm.lore = lore;
+				}
+				return nm;
+			}
+		}
+		return null;
 	}
 
 	public FileConfiguration getConfig() {
@@ -104,13 +141,19 @@ public class NamesChanger {
 			plugin.names.setName(its);
 		}
 	}
-	
+
 	public void setName(ItemStack items) {
-		if(items != null && !hasNameSet(items) && names.containsKey(items.getTypeId())) {
+		if (items != null && !hasNameSet(items) && names.containsKey(items.getTypeId())) {
 			String custom = names.get(items.getTypeId()).getName(items.getDurability());
-			if(custom != null) {
+			List<String> lore = names.get(items.getTypeId()).getLore(items.getDurability());
+			if (custom != null || lore != null) {
 				ItemMeta m = items.getItemMeta().clone();
-				m.setDisplayName(custom);
+				if (custom != null) {
+					m.setDisplayName(custom);
+				}
+				if (lore != null) {
+					m.setLore(lore);
+				}
 				items.setItemMeta(m);
 			}
 		}
@@ -122,7 +165,9 @@ public class NamesChanger {
 	}
 
 	public boolean hasNameSet(ItemStack item) {
-		return item != null && item.getItemMeta() != null && item.getItemMeta().hasDisplayName();
+		final ItemMeta meta;
+		return item != null && (meta = item.getItemMeta()) != null
+				&& meta.hasDisplayName() && (!plugin.renameCustom || ((meta instanceof Repairable) && ((Repairable) meta).hasRepairCost()));
 	}
 
 	public void setCraftingRecipies() {
@@ -174,7 +219,9 @@ public class NamesChanger {
 	static class ItemSubNames {
 
 		public String name = null;
+		public List<String> lore = null;
 		HashMap<Short, String> names = null;
+		HashMap<Short, List<String>> lores = null;
 
 		ItemSubNames() {
 		}
@@ -190,11 +237,25 @@ public class NamesChanger {
 			names.put(data, name);
 		}
 
+		public void addLore(short data, List<String> lore) {
+			if (lores == null) {
+				lores = new HashMap<Short, List<String>>();
+			}
+			lores.put(data, lore);
+		}
+
 		public String getName(short data) {
 			if (names != null && names.containsKey(data)) {
 				return names.get(data);
 			}
 			return name;
+		}
+
+		public List<String> getLore(short data) {
+			if (lores != null && lores.containsKey(data)) {
+				return lores.get(data);
+			}
+			return lore;
 		}
 	}
 }

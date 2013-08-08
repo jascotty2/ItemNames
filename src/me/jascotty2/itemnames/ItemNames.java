@@ -1,9 +1,11 @@
 
 package me.jascotty2.itemnames;
 
+import java.io.IOException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
@@ -13,13 +15,29 @@ public class ItemNames extends JavaPlugin {
 
 	Listeners listener = new Listeners(this);
 	NamesChanger names = new NamesChanger(this);
+	boolean renameCustom = true;
 	
 	@Override
 	public void onEnable() {
+		saveDefaultConfig();
+		load();
+
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(listener, this);
 		names.reloadConfig();
 		names.setCraftingRecipies();
+		try {
+			Metrics metrics = new Metrics(this);
+			metrics.start();
+		} catch (IOException e) {
+			// Failed to submit the stats :-(
+		}
+	}
+
+	void load() {
+		reloadConfig();
+		FileConfiguration conf = getConfig();
+		renameCustom = conf.getBoolean("renameCustom", renameCustom);
 	}
 	
 	@Override

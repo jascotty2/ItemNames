@@ -1,0 +1,5 @@
+
+# rename items (not just unnamed) that have not ben named using an anvil
+# set this to false if you have another plugin making named items
+# - not all plugins set names as though they were named via anvil
+renameCustom: true
