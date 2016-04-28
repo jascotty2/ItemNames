@@ -44,6 +44,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,6 +52,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
+import org.bukkit.entity.Player;
 
 /**
  * <p>
@@ -360,7 +362,14 @@ public class Metrics {
         data.append(encode("guid")).append('=').append(encode(guid));
         encodeDataPair(data, "version", description.getVersion());
         encodeDataPair(data, "server", Bukkit.getVersion());
-        encodeDataPair(data, "players", Integer.toString(Bukkit.getServer().getOnlinePlayers().length));
+		int players = 0;
+		Object pl = Bukkit.getServer().getOnlinePlayers();
+		if(pl instanceof Collection) {
+			players = ((Collection)pl).size();
+		} else if (pl instanceof Player[]) {
+			players = ((Player[])pl).length;
+		}
+        encodeDataPair(data, "players", Integer.toString(players));
         encodeDataPair(data, "revision", String.valueOf(REVISION));
 
         // If we're pinging, append it
