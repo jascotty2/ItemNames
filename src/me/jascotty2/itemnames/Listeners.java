@@ -66,6 +66,7 @@ public class Listeners implements Listener {
 		plugin.names.setName(event.getItemStack());
 	}
 	
+	
 	// fires /before/ brew potion conversion
 //	@EventHandler(priority = EventPriority.HIGHEST) 
 //	public void onBrew(BrewEvent event) {

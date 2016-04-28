@@ -170,6 +170,55 @@ public class NamesChanger {
 				&& meta.hasDisplayName() && (!plugin.renameCustom || ((meta instanceof Repairable) && ((Repairable) meta).hasRepairCost()));
 	}
 
+	public void setCraftingRecipes() {
+		Iterator<Recipe> serverRecipes = plugin.getServer().recipeIterator();
+		ArrayList<Recipe> temp = new ArrayList<Recipe>();
+		while (serverRecipes.hasNext()) {
+			Recipe rec = serverRecipes.next();
+			if(hasNameAvailable(rec.getResult())) {
+				temp.add(getNamedRecipeCopy(rec));
+			} else {
+			//	temp.add(rec);
+			}
+		}
+		// stained leather is a special recipe that can't be copied, and clear deletes it
+		// ...
+		//plugin.getServer().clearRecipes();
+		for (Recipe r : temp) {
+			plugin.getServer().addRecipe(r);
+		}
+	}
+
+	Recipe getNamedRecipeCopy(Recipe rec) {
+		if (rec instanceof ShapedRecipe) {
+			ShapedRecipe r = (ShapedRecipe) rec;
+			ItemStack res = r.getResult();
+			setName(res);
+			ShapedRecipe newR = new ShapedRecipe(res);
+			newR.shape(r.getShape());
+			Map<Character, ItemStack> craft = r.getIngredientMap();
+			for (Map.Entry<Character, ItemStack> e : craft.entrySet()) {
+				if (e.getValue() != null) {
+					newR.setIngredient(e.getKey(), e.getValue().getType(), e.getValue().getDurability());
+				}
+			}
+			return newR;
+		} else if (rec instanceof ShapelessRecipe) {
+			ShapelessRecipe r = (ShapelessRecipe) rec;
+			ItemStack res = r.getResult();
+			setName(res);
+			ShapelessRecipe newR = new ShapelessRecipe(res);
+			List<ItemStack> craft = r.getIngredientList();
+			for (ItemStack it : craft) {
+				if (it != null) {
+					newR.addIngredient(it.getAmount(), it.getType(), it.getDurability());
+				}
+			}
+			return newR;
+		}
+		return rec;
+	}
+/*
 	public void setCraftingRecipies() {
 		Iterator serverRecipes = plugin.getServer().recipeIterator();
 		ArrayList<Recipe> toRemove = new ArrayList<Recipe>();
@@ -215,7 +264,7 @@ public class NamesChanger {
 			}
 		}
 	}
-
+*/
 	static class ItemSubNames {
 
 		public String name = null;

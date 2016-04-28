@@ -25,7 +25,7 @@ public class ItemNames extends JavaPlugin {
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(listener, this);
 		names.reloadConfig();
-		names.setCraftingRecipies();
+		names.setCraftingRecipes();
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
